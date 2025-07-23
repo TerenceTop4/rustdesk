@@ -92,6 +92,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       buildTip(context),
       if (!isOutgoingOnly) buildIDBoard(context),
       if (!isOutgoingOnly) buildPasswordBoard(context),
+if (!isOutgoingOnly) OnlineStatusWidget().marginOnly(bottom: 6, right: 6),
       FutureBuilder<Widget>(
         future: Future.value(
             Obx(() => buildHelpCards(stateGlobal.updateUrl.value))),
@@ -115,15 +116,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     if (isIncomingOnly) {
       children.addAll([
         Divider(),
-        OnlineStatusWidget(
-          onSvcStatusChanged: () {
-            if (isInHomePage()) {
-              Future.delayed(Duration(milliseconds: 300), () {
-                _updateWindowSize();
-              });
-            }
-          },
-        ).marginOnly(bottom: 6, right: 6)
+        
       ]);
     }
     final textColor = Theme.of(context).textTheme.titleLarge?.color;
@@ -179,12 +172,62 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     );
   }
 
-  buildRightPane(BuildContext context) {
-    return Container(
-      color: Theme.of(context).scaffoldBackgroundColor,
-      child: ConnectionPage(),
-    );
-  }
+
+buildRightPane(BuildContext context) { 
+   return Container( 
+     color: Theme.of(context).scaffoldBackgroundColor, 
+     child: Column( 
+       children: [ 
+         Expanded( 
+           child: Column( 
+             mainAxisAlignment: MainAxisAlignment.center, 
+             children: [ 
+               SizedBox(
+                 width: 367,
+                 height: 125,
+                 child: Image.asset(
+                   'assets/logo.png',
+                   fit: BoxFit.contain,
+                 ),
+               ), 
+               SizedBox(height: 16), 
+               Text( 
+                 "目前僅提供被控遠端功能",
+                 style: TextStyle( 
+                   fontSize: 24, 
+                   fontWeight: FontWeight.bold, 
+                   color: Colors.grey[700], 
+                 ), 
+               ), 
+                            SizedBox(height: 16),
+              Text(
+                "★.★ 不需要 點安裝 ★.★",
+                style: TextStyle(
+                  // 跟主標題一樣大
+				  fontSize: 24,
+                  // 跟主標題一樣粗
+				  fontWeight: FontWeight.bold, 
+                  // 紅色
+				  color: Colors.red,
+                ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                "請直接提供左邊 ID 及 密碼 來進行遠端協助",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+              ),
+//              SizedBox(height: 16),
+//              OnlineStatusWidget(),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   buildIDBoard(BuildContext context) {
     final model = gFFI.serverModel;
@@ -579,18 +622,49 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         content != 'install_daemon_tip') {
       return const SizedBox();
     }
-    void closeCard() async {
-      if (closeOption != null) {
-        await bind.mainSetLocalOption(key: closeOption, value: 'N');
-        if (bind.mainGetLocalOption(key: closeOption) == 'N') {
+  
+
+void closeCard() async {
+      bool shouldClose = true;
+      
+      // 如果是未安裝版本，顯示確認對話框
+      if (!bind.mainIsInstalled()) {
+        final bool? userConfirmed = await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('確認'),
+              content: Text('關閉此視窗後無法進行遠端連線，是否確認關閉視窗。'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text('取消'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text('確認'),
+                ),
+              ],
+            );
+          },
+        );
+        shouldClose = userConfirmed == true;
+      }
+
+      // 只有在確認關閉時才執行關閉邏輯
+      if (shouldClose) {
+        if (closeOption != null) {
+          await bind.mainSetLocalOption(key: closeOption, value: 'N');
+          if (bind.mainGetLocalOption(key: closeOption) == 'N') {
+            setState(() {
+              isCardClosed = true;
+            });
+          }
+        } else {
           setState(() {
             isCardClosed = true;
           });
         }
-      } else {
-        setState(() {
-          isCardClosed = true;
-        });
       }
     }
 
