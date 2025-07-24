@@ -1579,15 +1579,20 @@ bool option2bool(String option, String value) {
 }
 
 String bool2option(String option, bool b) {
+  if (option == kOptionDirectServer ||
+      option == kOptionAllowRemoteConfigModification ||
+      option == kOptionAllowNumericOneTimePassword) {
+    return b ? 'Y' : 'N';
+  }
   String res;
   if (option.startsWith('enable-') &&
       option != kOptionEnableUdpPunch &&
       option != kOptionEnableIpv6Punch) {
     res = b ? defaultOptionYes : 'N';
   } else if (option.startsWith('allow-') ||
-      option == kOptionStopService ||
-      option == kOptionDirectServer ||
-      option == kOptionForceAlwaysRelay) {
+             option == kOptionStopService ||
+             option == kOptionDirectServer ||
+             option == kOptionForceAlwaysRelay) {
     res = b ? 'Y' : defaultOptionNo;
   } else {
     assert(false);
