@@ -574,13 +574,19 @@ class MyTheme {
   static Future<void> changeDarkMode(ThemeMode mode) async {
     Get.changeThemeMode(mode);
     if (desktopType == DesktopType.main || isAndroid || isIOS || isWeb) {
-      if (mode == ThemeMode.system) {
-        await bind.mainSetLocalOption(
-            key: kCommConfKeyTheme, value: defaultOptionTheme);
-      } else {
-        await bind.mainSetLocalOption(
-            key: kCommConfKeyTheme, value: mode.toShortString());
+      String value;
+      switch (mode) {
+        case ThemeMode.light:
+          value = 'light';
+          break;
+        case ThemeMode.dark:
+          value = 'dark';
+          break;
+        case ThemeMode.system:
+          value = 'system';  // 修改：設置為'system'，而不是defaultOptionTheme（假設其為空）
+          break;
       }
+      await bind.mainSetLocalOption(key: kCommConfKeyTheme, value: value);
       if (!isWeb) await bind.mainChangeTheme(dark: mode.toShortString());
       // Synchronize the window theme of the system.
       updateSystemWindowTheme();
@@ -616,7 +622,7 @@ class MyTheme {
       case "dark":
         return ThemeMode.dark;
       default:
-        return ThemeMode.system;
+        return ThemeMode.dark;  // 修改：空或預設值返回dark，而不是system
     }
   }
 }
