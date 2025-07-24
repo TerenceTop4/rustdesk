@@ -615,16 +615,17 @@ class MyTheme {
     return Theme.of(context).extension<TabbarTheme>()!;
   }
 
-  static ThemeMode themeModeFromString(String v) {
-    switch (v) {
-      case "light":
-        return ThemeMode.light;
-      case "dark":
-        return ThemeMode.dark;
-      default:
-        return ThemeMode.dark;  // 修改：空或預設值返回dark，而不是system
-    }
+  static ThemeMode themeModeFromString(String? value) {
+  if (value == 'light') {
+    return ThemeMode.light;
+  } else if (value == 'dark') {
+    return ThemeMode.dark;
+  } else if (value == 'system') {
+    return ThemeMode.system;
+  } else {
+    return ThemeMode.dark;  // 空或未知值預設為dark
   }
+}
 }
 
 extension ParseToString on ThemeMode {
@@ -1562,19 +1563,19 @@ String translate(String name) {
 // rust: libs/hbb_common/src/config.rs -> option2bool()
 // sciter: Does not have the function, but it should be kept the same.
 bool option2bool(String option, String value) {
-  bool res;
-  if (option.startsWith("enable-")) {
-    res = value != "N";
-  } else if (option.startsWith("allow-") ||
-      option == kOptionStopService ||
-      option == kOptionDirectServer ||
-      option == kOptionForceAlwaysRelay) {
-    res = value == "Y";
+  if (option == kOptionDirectServer ||
+      option == kOptionAllowRemoteConfigModification ||
+      option == kOptionAllowNumericOneTimePassword) {
+    return value != 'N';
+  } else if (option.startsWith('enable-')) {
+    return value != 'N';
+  } else if (option.startsWith('allow-') ||
+             option == kOptionStopService ||
+             option == kOptionForceAlwaysRelay) {
+    return value == 'Y';
   } else {
-    assert(false);
-    res = value != "N";
+    return value != 'N';
   }
-  return res;
 }
 
 String bool2option(String option, bool b) {
